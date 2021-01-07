@@ -11,5 +11,5 @@ python D:\Temp\ClockIn.py
 ## Linux
 不同发行版自启脚本的方式不同, 以下仅提供Arch版本:  
 ```
-
+自己搜吧
 ```
