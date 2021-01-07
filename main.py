@@ -3,6 +3,7 @@ import platform
 import getpass
 import os
 import time
+import json
 
 class ClockIn:
     # Content-Length无需指定
@@ -21,10 +22,7 @@ class ClockIn:
         'Cookie': 'nginx=04c46a5a8190bd9fca20ce66931cf420'
     }
 
-    login_info = {
-        'user_account': None,
-        'user_password': None
-    }
+    login_info = {}
 
     form_info = {
         'punch_form': {
@@ -52,15 +50,34 @@ class ClockIn:
             if user_name == 'root':
                 if os.path.isfile('/root/user_info.json'):
                     recorded = True
-                else:
-                    record_path = '/root/user_info.json'
+                record_path = '/root/user_info.json'
             else:
                 if os.path.isfile(f'/home/{user_name}/user_info.json'):
                     recorded = True
-                else:
-                    record_path = f'/home/{user_name}/user_info.json'
+                record_path = f'/home/{user_name}/user_info.json'
         elif sys_env == 'Windows':
+            if os.path.isfile(f'C:\\Users\\{user_name}\\user_info.json'):
+                recorded = True
+            record_path = f'C:\\Users\\{user_name}\\user_info.json'
+        else:
+            print(f'暂不支持{sys_env}')
+            i = input()
+            exit(0)
 
+        if recorded:
+            with open(record_path, 'r') as read:
+                self.login_info = json.load(read)
+        else:
+            while True:
+                self.login_info['user_account'] = input('输入帐号:')
+                self.login_info['user_password'] = input('输入密码:')
+                r = self.login()
+                if r['code'] == 200:
+                    with open(record_path, 'w') as write:
+                        json.dump(self.login_info, write)
+                    break
+                else:
+                    print(f'帐号或密码错误, 请重新输入')
 
     # 获得服务器发给的 jsessionid， 将其加入Cookie中
     def add_jsessionid(self):
@@ -149,6 +166,7 @@ class ClockIn:
 
     def clock_in(self):
         self.add_jsessionid()
+        self.get_user_info()
 
         login_res = self.login()
         if login_res['code'] != 200:
@@ -158,9 +176,7 @@ class ClockIn:
 
         getreq_res = self.get_homedate()
         latest_date_json = getreq_res['datas']['hunch_list'][0]
-        if latest_date_json['state'] == 2:
-            print(f'你已经打过卡了')
-            i = input()
+        if latest_date_json['state'] == 1:
             exit(0)
 
         push_res = self.push_punch_form(latest_date_json['date1'], getreq_res['datas']['hunch_list'][1]['date1'])
@@ -175,6 +191,22 @@ if __name__ == '__main__':
     if t.tm_hour < 10:
         exit(0)
 
+    for i in range(3):
+        ping_res = 0
+        if platform.system() == 'Linux':
+            ping_res = os.system('ping www.baidu.com -c 3')
+        elif platform.system() == 'Windows':
+            ping_res = os.system('ping www.baidu.com')
+        if ping_res and i == 2:
+            print(f'网络连接失败, 程序终止')
+            i = input()
+            exit(0)
+        elif ping_res:
+            print(f'网络连接失败, 正在进行第{i + 1}次重连')
+        else:
+            break
+
+    print('网络连接成功')
     c = ClockIn()
     c.clock_in()
     print(f'打卡成功!')
