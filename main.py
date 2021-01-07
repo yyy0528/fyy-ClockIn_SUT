@@ -5,6 +5,7 @@ import os
 import time
 import json
 
+
 class ClockIn:
     # Content-Length无需指定
     base_headers = {
@@ -86,7 +87,8 @@ class ClockIn:
         # headers 中有些信息不是必须的(有些信息服务器不会检查), 但为了模拟真实使用浏览器打卡避免被查到，把所有header信息补全
         l_headers = self.base_headers
         l_headers['Upgrade-Insecure-Requests'] = '1'
-        l_headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
+        l_headers[
+            'Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
         l_headers['Sec-Fetch-Site'] = 'none'
         l_headers['Sec-Fetch-Mode'] = 'navigate'
         l_headers['Sec-Fetch-Dest'] = 'document'
@@ -139,6 +141,10 @@ class ClockIn:
     # 提交打卡信息
     def push_punch_form(self, now_date: str, yesterday_date: str):
         yesterday_form = self.get_yesterday_punch_form(yesterday_date)
+        if yesterday_form['code'] != 200:
+            print(f'获取前一天打卡信息失败: {yesterday_form}')
+            i = input()
+            exit(0)
 
         url = 'https://yqtb.sut.edu.cn/punchForm'
 
@@ -176,7 +182,11 @@ class ClockIn:
 
         getreq_res = self.get_homedate()
         latest_date_json = getreq_res['datas']['hunch_list'][0]
-        if latest_date_json['state'] == 1:
+        if getreq_res['code'] != 200:
+            print(f'获取打卡时间表失败: {getreq_res}')
+            i = input()
+            exit(0)
+        elif latest_date_json['state'] == 1:
             exit(0)
 
         push_res = self.push_punch_form(latest_date_json['date1'], getreq_res['datas']['hunch_list'][1]['date1'])
