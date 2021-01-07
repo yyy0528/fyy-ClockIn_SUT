@@ -4,7 +4,7 @@ import getpass
 import os
 import time
 import json
-
+import sys
 
 class ClockIn:
     # Content-Length无需指定
@@ -63,7 +63,7 @@ class ClockIn:
         else:
             print(f'暂不支持{sys_env}')
             i = input()
-            exit(0)
+            sys.exit(0)
 
         if recorded:
             with open(record_path, 'r') as read:
@@ -144,7 +144,7 @@ class ClockIn:
         if yesterday_form['code'] != 200:
             print(f'获取前一天打卡信息失败: {yesterday_form}')
             i = input()
-            exit(0)
+            sys.exit(0)
 
         url = 'https://yqtb.sut.edu.cn/punchForm'
 
@@ -178,28 +178,28 @@ class ClockIn:
         if login_res['code'] != 200:
             print(f'登录失败: {login_res}')
             i = input()
-            exit(0)
+            sys.exit(0)
 
         getreq_res = self.get_homedate()
         latest_date_json = getreq_res['datas']['hunch_list'][0]
         if getreq_res['code'] != 200:
             print(f'获取打卡时间表失败: {getreq_res}')
             i = input()
-            exit(0)
+            sys.exit(0)
         elif latest_date_json['state'] == 1:
-            exit(0)
+            sys.exit(0)
 
         push_res = self.push_punch_form(latest_date_json['date1'], getreq_res['datas']['hunch_list'][1]['date1'])
         if push_res['code'] != 200:
             print(f'打卡信息提交失败: {push_res}')
             i = input()
-            exit(0)
+            sys.exit(0)
 
 
 if __name__ == '__main__':
     t = time.localtime(time.time())
     if t.tm_hour < 10:
-        exit(0)
+        sys.exit(0)
 
     for i in range(3):
         ping_res = 0
@@ -210,9 +210,10 @@ if __name__ == '__main__':
         if ping_res and i == 2:
             print(f'网络连接失败, 程序终止')
             i = input()
-            exit(0)
+            sys.exit(0)
         elif ping_res:
-            print(f'网络连接失败, 正在进行第{i + 1}次重连')
+            print(f'网络连接失败, 5秒后进行第{i + 1}次重连')
+            time.sleep(5)
         else:
             break
 
