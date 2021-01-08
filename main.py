@@ -195,6 +195,8 @@ class ClockIn:
             i = input()
             sys.exit(0)
 
+        print('打卡成功')
+
 
 if __name__ == '__main__':
     t = time.localtime(time.time())
@@ -220,4 +222,3 @@ if __name__ == '__main__':
     print('网络连接成功', '\n', '正在打卡...')
     c = ClockIn()
     c.clock_in()
-    print(f'打卡成功!')
