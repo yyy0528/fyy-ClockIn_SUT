@@ -217,7 +217,7 @@ if __name__ == '__main__':
         else:
             break
 
-    print('网络连接成功')
+    print('网络连接成功', '\n', '正在打卡...')
     c = ClockIn()
     c.clock_in()
     print(f'打卡成功!')
