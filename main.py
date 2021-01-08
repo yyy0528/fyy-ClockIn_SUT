@@ -13,7 +13,7 @@ class ClockIn:
         'Connection': 'keep-alive',
         'Pragma': 'no-cache',
         'Cache-Control': 'no-cache',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
         'Accept': None,
         'Sec-Fetch-Site': None,
         'Sec-Fetch-Mode': None,
