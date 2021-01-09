@@ -163,8 +163,7 @@ class ClockIn:
                 self.form_info['punch_form'][field['field_code']] = val
             else:
                 self.form_info['punch_form'][field['field_code']] = ''
-        t = str(self.form_info['punch_form'])
-        true_form['punch_form'] = t.replace('\'', '\"')
+        true_form['punch_form'] = json.dumps(self.form_info['punch_form'])
 
         r = requests.post(url=url, headers=l_headers, json=true_form)
 
