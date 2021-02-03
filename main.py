@@ -145,7 +145,6 @@ class ClockIn:
             print(f'获取前一天打卡信息失败: {yesterday_form}')
             i = input()
             sys.exit(0)
-
         url = 'https://yqtb.sut.edu.cn/punchForm'
 
         l_headers = self.base_headers
@@ -179,16 +178,20 @@ class ClockIn:
             i = input()
             sys.exit(0)
 
-        getreq_res = self.get_homedate()
-        latest_date_json = getreq_res['datas']['hunch_list'][0]
-        if getreq_res['code'] != 200:
-            print(f'获取打卡时间表失败: {getreq_res}')
+        homedate_json = self.get_homedate()
+        latest_date_json = homedate_json['datas']['hunch_list'][0]
+        yesterday_date_json = homedate_json['datas']['hunch_list'][1]
+        if homedate_json['code'] != 200:
+            print(f'获取打卡时间表失败: {homedate_json}')
             i = input()
             sys.exit(0)
         elif latest_date_json['state'] == 1:
             sys.exit(0)
-
-        push_res = self.push_punch_form(latest_date_json['date1'], getreq_res['datas']['hunch_list'][1]['date1'])
+        elif yesterday_date_json['state'] == 0:
+            print('昨天你未打卡, 无法获取你的打卡信息，请今天手动打卡后再使用此脚本')
+            i = input()
+            sys.exit(0)
+        push_res = self.push_punch_form(latest_date_json['date1'], yesterday_date_json['date1'])
         if push_res['code'] != 200:
             print(f'打卡信息提交失败: {push_res}')
             i = input()
