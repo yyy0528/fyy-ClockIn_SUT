@@ -15,3 +15,5 @@ D:\Temp\ClockIn.exe
 ```
 然后将bat文件移动到Windows启动目录(C:\Users\你的Windows账户名\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup), 就可在每次系统启动时唤起程序, 完成自动打卡
 
+### 2021.02.03 更新
+添加提示"昨日未打卡的错误提示"
