@@ -64,8 +64,7 @@ class ClockIn:
                 recorded = True
             record_path = f'C:\\Users\\{user_name}\\user_info.json'
         else:
-            print(f'暂不支持{sys_env}')
-            i = input()
+            self.failed_reason = f'暂不支持{sys_env}'
             sys.exit(0)
 
         if recorded:
