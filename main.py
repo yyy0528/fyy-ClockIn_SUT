@@ -5,6 +5,7 @@ import os
 import time
 import json
 import sys
+import traceback
 
 class ClockIn:
     # Content-Length无需指定
@@ -41,6 +42,8 @@ class ClockIn:
         },
         'date': None
     }
+
+    failed_reason = ""
 
     def get_user_info(self):
         recorded = False
@@ -142,8 +145,7 @@ class ClockIn:
     def push_punch_form(self, now_date: str, yesterday_date: str):
         yesterday_form = self.get_yesterday_punch_form(yesterday_date)
         if yesterday_form['code'] != 200:
-            print(f'获取前一天打卡信息失败: {yesterday_form}')
-            i = input()
+            self.failed_reason = f'获取前一天打卡信息失败: {yesterday_form}'
             sys.exit(0)
         url = 'https://yqtb.sut.edu.cn/punchForm'
 
@@ -174,27 +176,24 @@ class ClockIn:
 
         login_res = self.login()
         if login_res['code'] != 200:
-            print(f'登录失败: {login_res}')
-            i = input()
+            self.failed_reason = f'登录失败: {login_res}'
             sys.exit(0)
 
         homedate_json = self.get_homedate()
         latest_date_json = homedate_json['datas']['hunch_list'][0]
         yesterday_date_json = homedate_json['datas']['hunch_list'][1]
         if homedate_json['code'] != 200:
-            print(f'获取打卡时间表失败: {homedate_json}')
-            i = input()
+            self.failed_reason = f'获取打卡时间表失败: {homedate_json}'
             sys.exit(0)
         elif latest_date_json['state'] == 1:
-            sys.exit(0)
+            # 该状态为已经打卡, 只需要退出程序
+            return
         elif yesterday_date_json['state'] == 0:
-            print('昨天你未打卡, 无法获取你的打卡信息，请今天手动打卡后再使用此脚本')
-            i = input()
+            self.failed_reason = '昨天你未打卡, 无法获取你的打卡信息，请今天手动打卡后再使用此脚本'
             sys.exit(0)
         push_res = self.push_punch_form(latest_date_json['date1'], yesterday_date_json['date1'])
         if push_res['code'] != 200:
-            print(f'打卡信息提交失败: {push_res}')
-            i = input()
+            self.failed_reason = f'打卡信息提交失败: {push_res}'
             sys.exit(0)
 
         print('打卡成功')
@@ -217,10 +216,19 @@ if __name__ == '__main__':
             sys.exit(0)
         elif ping_res:
             print(f'网络连接失败, 5秒后进行第{i + 1}次重连')
+
             time.sleep(5)
         else:
             break
 
     print('网络连接成功', '\n', '正在打卡...')
     c = ClockIn()
-    c.clock_in()
+    try:
+        c.clock_in()
+    except SystemExit:
+        print(f"{c.failed_reason}\nfailed!")
+        i = input()
+    except Exception:
+        traceback.print_exc()
+        print("failed!")
+        i = input()
