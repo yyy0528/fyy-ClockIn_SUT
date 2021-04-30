@@ -203,22 +203,29 @@ if __name__ == '__main__':
     if t.tm_hour < 10:
         sys.exit(0)
 
-    for i in range(3):
+    i = 0
+    while i < 3:
         ping_res = 0
         if platform.system() == 'Linux':
             ping_res = os.system('ping www.baidu.com -c 3')
         elif platform.system() == 'Windows':
             ping_res = os.system('ping www.baidu.com')
         if ping_res and i == 2:
-            print(f'网络连接失败, 程序终止')
-            i = input()
-            sys.exit(0)
+            print('网络连接失败, 重新连接吗？[y/n]')
+            choose = 0
+            while choose != 'y' and choose != 'Y' and choose != 'n' and choose != 'N':
+                choose = input()
+            if choose == 'y' or choose == 'Y':
+                i = 0
+                continue
+            else:
+                sys.exit(0)
         elif ping_res:
             print(f'网络连接失败, 5秒后进行第{i + 1}次重连')
-
             time.sleep(5)
         else:
             break
+        i = i + 1
 
     print('网络连接成功', '\n', '正在打卡...')
     c = ClockIn()
