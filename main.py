@@ -9,22 +9,6 @@ import traceback
 
 
 class ClockIn:
-    # Content-Length无需指定
-    #    base_headers = {
-    #        'Host': 'yqtb.sut.edu.cn',
-    #        'Connection': 'keep-alive',
-    #        'Pragma': 'no-cache',
-    #        'Cache-Control': 'no-cache',
-    #        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
-    #        'Accept': None,
-    #        'Sec-Fetch-Site': None,
-    #        'Sec-Fetch-Mode': None,
-    #        'Sec-Fetch-Dest': None,
-    #        'Accept-Encoding': 'gzip, deflate, br',
-    #        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-    #        'Cookie': 'nginx=04c46a5a8190bd9fca20ce66931cf420'
-    #    }
-
     base_headers = {
         'Host': 'yqtb.sut.edu.cn',
         'Connection': 'keep-alive',
