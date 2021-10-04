@@ -7,21 +7,37 @@ import json
 import sys
 import traceback
 
+
 class ClockIn:
     # Content-Length无需指定
+    #    base_headers = {
+    #        'Host': 'yqtb.sut.edu.cn',
+    #        'Connection': 'keep-alive',
+    #        'Pragma': 'no-cache',
+    #        'Cache-Control': 'no-cache',
+    #        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
+    #        'Accept': None,
+    #        'Sec-Fetch-Site': None,
+    #        'Sec-Fetch-Mode': None,
+    #        'Sec-Fetch-Dest': None,
+    #        'Accept-Encoding': 'gzip, deflate, br',
+    #        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+    #        'Cookie': 'nginx=04c46a5a8190bd9fca20ce66931cf420'
+    #    }
+
     base_headers = {
         'Host': 'yqtb.sut.edu.cn',
         'Connection': 'keep-alive',
-        'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
+        'sec-ch-ua': '"Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Linux"',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36',
         'Accept': None,
         'Sec-Fetch-Site': None,
         'Sec-Fetch-Mode': None,
         'Sec-Fetch-Dest': None,
         'Accept-Encoding': 'gzip, deflate, br',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Cookie': 'nginx=04c46a5a8190bd9fca20ce66931cf420'
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7'
     }
 
     login_info = {}
@@ -71,33 +87,27 @@ class ClockIn:
             with open(record_path, 'r') as read:
                 self.login_info = json.load(read)
         else:
-            while True:
-                self.login_info['user_account'] = input('输入帐号:')
-                self.login_info['user_password'] = input('输入密码:')
-                r = self.login()
-                if r['code'] == 200:
-                    with open(record_path, 'w') as write:
-                        json.dump(self.login_info, write)
-                    break
-                else:
-                    print(f'帐号或密码错误, 请重新输入')
+            self.login_info['user_account'] = input('输入帐号:')
+            self.login_info['user_password'] = input('输入密码:')
+            with open(record_path, 'w') as write:
+                json.dump(self.login_info, write)
 
     # 获得服务器发给的 jsessionid， 将其加入Cookie中
     def add_jsessionid(self):
         url = 'https://yqtb.sut.edu.cn/login/base'
 
         # headers 中有些信息不是必须的(有些信息服务器不会检查), 但为了模拟真实使用浏览器打卡避免被查到，把所有header信息补全
-        l_headers = self.base_headers
+        l_headers = self.base_headers.copy()
         l_headers['Upgrade-Insecure-Requests'] = '1'
         l_headers[
             'Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
         l_headers['Sec-Fetch-Site'] = 'none'
         l_headers['Sec-Fetch-Mode'] = 'navigate'
+        l_headers['Sec-Fetch-User'] = '?1'
         l_headers['Sec-Fetch-Dest'] = 'document'
-        r = requests.get(url=url, headers=l_headers)
-        add_cookie = r.headers['Set-Cookie']
-        add_cookie = add_cookie[: add_cookie.index(';')]
-        self.base_headers['Cookie'] = self.base_headers['Cookie'] + '; ' + add_cookie
+        r = requests.get(url=url, headers=l_headers, verify=False)
+        cookie_info = r.cookies._cookies['yqtb.sut.edu.cn']['/']
+        self.base_headers['Cookie'] = 'JSESSIONID={}; nginx={}'.format(cookie_info['JSESSIONID'].value, cookie_info['nginx'].value)
 
     # 登录
     def login(self):
@@ -111,10 +121,10 @@ class ClockIn:
         self.base_headers['X-Requested-With'] = 'XMLHttpRequest'
         self.base_headers['Origin'] = 'https://yqtb.sut.edu.cn'
 
-        l_headers = self.base_headers
+        l_headers = self.base_headers.copy()
         l_headers['Referer'] = 'https://yqtb.sut.edu.cn/login/base'
 
-        r = requests.post(url=url, headers=l_headers, json=self.login_info)
+        r = requests.post(url=url, headers=l_headers, json=self.login_info, verify=False)
 
         return r.json()
 
@@ -122,11 +132,11 @@ class ClockIn:
     def get_homedate(self):
         url = 'https://yqtb.sut.edu.cn/getHomeDate'
 
-        l_headers = self.base_headers
+        l_headers = self.base_headers.copy()
         l_headers['Content-Length'] = '0'
         l_headers['Referer'] = 'https://yqtb.sut.edu.cn/home'
 
-        r = requests.post(url=url, headers=l_headers)
+        r = requests.post(url=url, headers=l_headers, verify=False)
 
         return r.json()
 
@@ -134,10 +144,10 @@ class ClockIn:
     def get_yesterday_punch_form(self, yesterday_date: str):
         url = 'https://yqtb.sut.edu.cn/getPunchForm'
 
-        l_headers = self.base_headers
+        l_headers = self.base_headers.copy()
         l_headers['Referer'] = 'https://yqtb.sut.edu.cn/home'
 
-        r = requests.post(url=url, headers=l_headers, json={'date': yesterday_date})
+        r = requests.post(url=url, headers=l_headers, json={'date': yesterday_date}, verify=False)
         return r.json()
 
     # 提交打卡信息
@@ -148,7 +158,7 @@ class ClockIn:
             sys.exit(0)
         url = 'https://yqtb.sut.edu.cn/punchForm'
 
-        l_headers = self.base_headers
+        l_headers = self.base_headers.copy()
         l_headers['Referer'] = 'https://yqtb.sut.edu.cn/home'
 
         # 真实的form, punch_form的值为字符串
@@ -165,7 +175,7 @@ class ClockIn:
                 self.form_info['punch_form'][field['field_code']] = ''
         true_form['punch_form'] = json.dumps(self.form_info['punch_form'])
 
-        r = requests.post(url=url, headers=l_headers, json=true_form)
+        r = requests.post(url=url, headers=l_headers, json=true_form, verify=False)
 
         return r.json()
 
