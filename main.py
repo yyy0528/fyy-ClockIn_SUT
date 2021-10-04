@@ -7,7 +7,6 @@ import json
 import sys
 import traceback
 
-
 class ClockIn:
     base_headers = {
         'Host': 'yqtb.sut.edu.cn',
