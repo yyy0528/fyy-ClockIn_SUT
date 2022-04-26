@@ -1,20 +1,69 @@
 # ClockIn_SUT
+这是一个适用于沈阳工业大学学生的疫情打卡脚本，现在已支持基于Github Action的自动定时打卡  
+**使用该脚本时不要开启vpn**
+## 原理
+该脚本读取使用者前一天的打卡信息，并将获取的信息用于今天的打卡。这意味着当你的所在的位置变化时（例如假期回家或开学返校）时，你需要手动打一次卡更新你的位置信息
 
-**打开此脚本时请勿开启vpn, 开启vpn会使服务器找不到你真实ip而使打卡失败**  
-一个仅适用与SUT学生的自动疫情打卡脚本, 暂不支持mac os(主要我没用过不知道把文件放哪XD)   
-该脚本会自动抓取你前一天的打卡记录, 并根据前一天的打卡信息完成今天的打卡(也就是说如果你换了地方后的第一天就得自己打卡了)  
-第一次启动该脚本后需要输入账号和密码, 之后启动不需要, 完成打卡后脚本会自动退出
-## Windows环境开机自动开启此脚本
-如果你有python环境, 使用pip安装requests包, 将python脚本放在一个特定位置, 然后创建一个bat批处理文件, 内容如下(假定python存放位置为D:\\Temp):
-```bat
-python D:\Temp\main.py
-```
-如果你没有python环境, 下载release中的ClockIn.exe, 然后创建一个bat文件, 内容如下(假定exe文件存放位置为D:\\Temp):
-```bat
-D:\Temp\ClockIn.exe
-```
-然后将bat文件移动到Windows启动目录(C:\Users\你的Windows账户名\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup), 就可在每次系统启动时唤起程序, 完成自动打卡
+## 自动打卡（推荐）
+1. [fork](https://github.com/Ca1se/ClockIn_SUT/fork) 这个库，你会在自己的账号下得到一个一模一样的库  
+![forked repo](./picture/forked_repository.png)
+2. 点击这个库的 Settings 选项  
+![click settings](./picture/click_settings.png)
+3. 点击 Secrets 选项, 继续点击 Action 选项  
+![click secrets](./picture/click_secrets.png)
+4. 点击 New repository secret  
+![new secret](./picture/new_secret.png)
+5. 在 Name 中填写 USER_ACCOUNT，在 Value 中填写你的打卡账号，然后点击 Add secret  
+![save secret](./picture/save_secret.png)
+6. 再次点击 New repository secret，在 Name 中填写 USER_PASSWORD，在 Value 中填写你的打卡账号的密码，然后点击 Add secret
+7. 所有设置已完成，你fork的仓库会在每天的上午11点，下午1点帮你自动打卡
+8. 当你不想再使用自动打卡时，只需要在settings选项中删除fork的库就行了  
+![delete repo](./picture/delete_repo.png)
 
+## 手动打卡
+### windows
+1. 在python官网的[下载页](https://www.python.org/downloads/)下载最新版本的python安装包并安装，并确保将python加入到了环境变量path中
+2. 在powershell并输入以下命令并等待命令执行完毕
+```
+    python -m pip install requests
+```
+3. 下载该脚本
+4. 使用python运行该脚本, 该脚本需要获取你打卡要使用的账号和密码  
+你可以在开始运行该脚本时将账号和密码传入脚本，或者直接运行脚本，当脚本提示输入账号和密码时输入对应信息
+```
+    # 在开始运行脚本时将账号和密码传入脚本(假设账号为123456，密码为456789), 使用该方法不会将你的账号密码保存在你的电脑
+    python main.py -u 123456 -p 456789
+    # 或者直接运行脚本，根据提示输入账号和密码，使用该方法会将你的账号密码储存在你的电脑上，在下次运行该脚本时脚本将直接读取储存的账号和密码
+    python main.py
+    # 当显示 account: 时,输入账号并回车
+    account:123456
+    # 当显示 password: 时,输入密码并回车（注意，在输入密码时，你无法看到你输入的内容）
+    password:
+``` 
+5. 等待脚本运行完成，当脚本显示'Success'时，打卡成功。
+
+### Linux
+1. 安装python3与python的requests包
+```
+    # 以ubuntu为例
+    sudo apt install python3.9 python3-requests
+```
+2. 下载该脚本
+3. 使用python运行该脚本, 该脚本需要获取你打卡要使用的账号和密码  
+你可以在开始运行该脚本时将账号和密码传入脚本，或者直接运行脚本，当脚本提示输入账号和密码时输入对应信息
+```
+    # 在开始运行脚本时将账号和密码传入脚本(假设账号为123456，密码为456789), 使用该方法不会将你的账号密码保存在你的电脑
+    python main.py -u 123456 -p 456789
+    # 或者直接运行脚本，根据提示输入账号和密码，使用该方法会将你的账号密码储存在你的电脑上，在下次运行该脚本时脚本将直接读取储存的账号和密码
+    python main.py
+    # 当显示 account: 时,输入账号并回车
+    account:123456
+    # 当显示 password: 时,输入密码并回车（注意，在输入密码时，你无法看到你输入的内容）
+    password:
+``` 
+4. 等待脚本运行完成，当脚本显示'Success'时，打卡成功。
+
+## 更新信息
 ### 2021.02.03 更新
 添加提示"昨日未打卡的错误提示"
 
@@ -26,3 +75,6 @@ D:\Temp\ClockIn.exe
 
 ### 2021.10.04 更新
 修复无法打卡问题
+
+### 2022.4.26 更新
+添加基于Github Action的自动打卡功能

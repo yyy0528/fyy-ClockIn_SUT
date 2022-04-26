@@ -1,11 +1,14 @@
+import warnings
 import requests
+import argparse
 import platform
 import getpass
-import os
-import time
+import getpass
 import json
 import sys
-import traceback
+import os
+
+parser = argparse.ArgumentParser()
 
 class ClockIn:
     base_headers = {
@@ -42,9 +45,16 @@ class ClockIn:
         'date': None
     }
 
-    failed_reason = ""
-
     def get_user_info(self):
+        args = parser.parse_args();
+        if args.account or args.password:
+            if args.account and args.password:
+                self.login_info['user_account'] = args.account
+                self.login_info['user_password'] = args.password
+                return
+            else:
+                raise Exception("The two parameters '--account' and '--password' need to be used together")
+
         recorded = False
         record_path = ''
         sys_env = platform.system()
@@ -63,17 +73,19 @@ class ClockIn:
                 recorded = True
             record_path = f'C:\\Users\\{user_name}\\user_info.json'
         else:
-            self.failed_reason = f'暂不支持{sys_env}'
-            sys.exit(0)
+            raise Exception(f'Not support {sys_env} yet')
 
-        if recorded:
-            with open(record_path, 'r') as read:
-                self.login_info = json.load(read)
-        else:
-            self.login_info['user_account'] = input('输入帐号:')
-            self.login_info['user_password'] = input('输入密码:')
-            with open(record_path, 'w') as write:
-                json.dump(self.login_info, write)
+        try:
+            if recorded:
+                with open(record_path, 'r') as read:
+                    self.login_info = json.load(read)
+            else:
+                self.login_info['user_account'] = input('account:')
+                self.login_info['user_password'] = getpass.getpass('password:')
+                with open(record_path, 'w') as write:
+                    json.dump(self.login_info, write)
+        except Exception:
+            raise Exception('Failed to read or write json file')
 
     # 获得服务器发给的 jsessionid， 将其加入Cookie中
     def add_jsessionid(self):
@@ -82,13 +94,16 @@ class ClockIn:
         # headers 中有些信息不是必须的(有些信息服务器不会检查), 但为了模拟真实使用浏览器打卡避免被查到，把所有header信息补全
         l_headers = self.base_headers.copy()
         l_headers['Upgrade-Insecure-Requests'] = '1'
-        l_headers[
-            'Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
+        l_headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
         l_headers['Sec-Fetch-Site'] = 'none'
         l_headers['Sec-Fetch-Mode'] = 'navigate'
         l_headers['Sec-Fetch-User'] = '?1'
         l_headers['Sec-Fetch-Dest'] = 'document'
-        r = requests.get(url=url, headers=l_headers, verify=False)
+
+        try:
+            r = requests.get(url=url, headers=l_headers, verify=False)
+        except Exception:
+            raise Exception('Failed to get jsessionid')
         cookie_info = r.cookies._cookies['yqtb.sut.edu.cn']['/']
         self.base_headers['Cookie'] = 'JSESSIONID={}; nginx={}'.format(cookie_info['JSESSIONID'].value, cookie_info['nginx'].value)
 
@@ -107,7 +122,10 @@ class ClockIn:
         l_headers = self.base_headers.copy()
         l_headers['Referer'] = 'https://yqtb.sut.edu.cn/login/base'
 
-        r = requests.post(url=url, headers=l_headers, json=self.login_info, verify=False)
+        try:
+            r = requests.post(url=url, headers=l_headers, json=self.login_info, verify=False)
+        except Exception:
+            raise Exception('Failed to get login results')
 
         return r.json()
 
@@ -119,7 +137,10 @@ class ClockIn:
         l_headers['Content-Length'] = '0'
         l_headers['Referer'] = 'https://yqtb.sut.edu.cn/home'
 
-        r = requests.post(url=url, headers=l_headers, verify=False)
+        try:
+            r = requests.post(url=url, headers=l_headers, verify=False)
+        except Exception:
+            raise Exception('Failed to get homedate form')
 
         return r.json()
 
@@ -168,66 +189,35 @@ class ClockIn:
 
         login_res = self.login()
         if login_res['code'] != 200:
-            self.failed_reason = f'登录失败: {login_res}'
-            sys.exit(0)
+            raise Exception('Failed to login, check your account and password')
 
         homedate_json = self.get_homedate()
+        if homedate_json['code'] != 200:
+            raise Exception('Received a bad response when while getting homedate form')
+
         latest_date_json = homedate_json['datas']['hunch_list'][0]
         yesterday_date_json = homedate_json['datas']['hunch_list'][1]
-        if homedate_json['code'] != 200:
-            self.failed_reason = f'获取打卡时间表失败: {homedate_json}'
-            sys.exit(0)
-        elif latest_date_json['state'] == 1:
-            # 该状态为已经打卡, 只需要退出程序
-            return
-        elif yesterday_date_json['state'] == 0:
-            self.failed_reason = '昨天你未打卡, 无法获取你的打卡信息，请今天手动打卡后再使用此脚本'
-            sys.exit(0)
-        push_res = self.push_punch_form(latest_date_json['date1'], yesterday_date_json['date1'])
-        if push_res['code'] != 200:
-            self.failed_reason = f'打卡信息提交失败: {push_res}'
-            sys.exit(0)
 
-        print('打卡成功')
+        if latest_date_json['state'] == 0:
+            if yesterday_date_json['state'] == 0:
+                raise Exception("Can't get your clock-in information for yesterday")
+
+            push_res = self.push_punch_form(
+                latest_date_json['date1'], yesterday_date_json['date1'])
+            if push_res['code'] != 200:
+                raise Exception("Can't push clock-in form to server")
 
 
 if __name__ == '__main__':
-    t = time.localtime(time.time())
-    if t.tm_hour < 10:
-        sys.exit(0)
+    warnings.filterwarnings('ignore')
+    group = parser.add_argument_group('must be used together')
+    group.add_argument('--account', '-u', help='your account used for clock-in')
+    group.add_argument('--password', '-p', help="your account's password")
 
-    i = 0
-    while i < 3:
-        ping_res = 0
-        if platform.system() == 'Linux':
-            ping_res = os.system('ping www.baidu.com -c 3')
-        elif platform.system() == 'Windows':
-            ping_res = os.system('ping www.baidu.com')
-        if ping_res and i == 2:
-            print('网络连接失败, 重新连接吗？[y/n]')
-            choose = 0
-            while choose != 'y' and choose != 'Y' and choose != 'n' and choose != 'N':
-                choose = input()
-            if choose == 'y' or choose == 'Y':
-                i = 0
-                continue
-            else:
-                sys.exit(0)
-        elif ping_res:
-            print(f'网络连接失败, 5秒后进行第{i + 1}次重连')
-            time.sleep(5)
-        else:
-            break
-        i = i + 1
-
-    print('网络连接成功', '\n', '正在打卡...')
-    c = ClockIn()
+    cl = ClockIn()
     try:
-        c.clock_in()
-    except SystemExit:
-        print(f"{c.failed_reason}\nfailed!")
-        i = input()
-    except Exception:
-        traceback.print_exc()
-        print("failed!")
-        i = input()
+        cl.clock_in()
+        print('Success')
+    except Exception as err:
+        print(f'Failed to clock-in: {err}')
+        sys.exit(-1)
