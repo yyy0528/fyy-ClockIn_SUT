@@ -7,17 +7,24 @@
 ## 自动打卡（推荐）
 1. [fork](https://github.com/Ca1se/ClockIn_SUT/fork) 这个库，你会在自己的账号下得到一个一模一样的库  
 ![forked repo](./picture/forked_repository.png)
-2. 点击这个库的 Settings 选项  
+2. 点击你fork好的库的 Settings 选项  
 ![click settings](./picture/click_settings.png)
-3. 点击 Secrets 选项, 继续点击 Action 选项  
+3. 点击 Secrets 选项, 继续点击 Actions 选项  
 ![click secrets](./picture/click_secrets.png)
 4. 点击 New repository secret  
 ![new secret](./picture/new_secret.png)
 5. 在 Name 中填写 USER_ACCOUNT，在 Value 中填写你的打卡账号，然后点击 Add secret  
 ![save secret](./picture/save_secret.png)
 6. 再次点击 New repository secret，在 Name 中填写 USER_PASSWORD，在 Value 中填写你的打卡账号的密码，然后点击 Add secret
-7. 所有设置已完成，你fork的仓库会在每天的上午11点，下午1点帮你自动打卡
-8. 当你不想再使用自动打卡时，只需要在settings选项中删除fork的库就行了  
+7. 点击你fork好的库的 Actions 选项，然后点击 I understand my workflows... 按钮  
+![click_actions](./picture/click_actions.png)  
+![click_long_bar](./picture/click_long_bar.png)
+8. 点击 Timed Clock in，然后点击右侧的 Enable workflow 按钮  
+![click_timed](./picture/click_timed.png)  
+![click_enable_workflow](./picture/click_enable_workflow.png)
+9. 所有设置已完成，你fork的仓库会在每天的上午11点，下午1点帮你自动打卡（实际打卡时间可能会由于Github Action的机制而延迟）。当你的仓库帮你打卡后，你可以在 Actions 选项下查看打卡结果。当由于某种原因打卡失败时，失败记录也将被记录在这里，并且Github会发送一封邮件到你注册Github的邮箱里告知你打卡失败
+![clock_in_result](./picture/clock_in_result.png)
+10. 当你不想再使用自动打卡时，只需要在 Settings 选项中删除fork的库就行了  
 ![delete repo](./picture/delete_repo.png)
 
 ## 手动打卡
