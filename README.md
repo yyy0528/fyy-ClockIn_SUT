@@ -1,6 +1,7 @@
 # ClockIn_SUT
 这是一个适用于沈阳工业大学学生的疫情打卡脚本，现在已支持基于Github Action的自动定时打卡  
-**使用该脚本时不要开启vpn**
+当你使用自动打卡，打卡脚本不在你电脑本地运行。
+**当你使用手动打卡，运行该脚本时不要开启vpn**
 ## 原理
 该脚本读取使用者前一天的打卡信息，并将获取的信息用于今天的打卡。这意味着当你的所在的位置变化时（例如假期回家或开学返校）时，你需要手动打一次卡更新你的位置信息
 
@@ -22,7 +23,7 @@
 8. 点击 Timed Clock in，然后点击右侧的 Enable workflow 按钮  
 ![click_timed](./picture/click_timed.png)  
 ![click_enable_workflow](./picture/click_enable_workflow.png)
-9. 所有设置已完成，你fork的仓库会在每天的上午11点，下午1点帮你自动打卡（实际打卡时间可能会由于Github Action的机制而延迟）。当你的仓库帮你打卡后，你可以在 Actions 选项下查看打卡结果。当由于某种原因打卡失败时，失败记录也将被记录在这里，并且Github会发送一封邮件到你注册Github的邮箱里告知你打卡失败
+9. 所有设置已完成，你fork的仓库会在每天的上午11点47分，下午1点47分帮你自动打卡（实际打卡时间可能会由于Github Action的机制而延迟）。当你的仓库帮你打卡后，你可以在 Actions 选项下查看打卡结果。当由于某种原因打卡失败时，失败记录也将被记录在这里，并且Github会发送一封邮件到你注册Github的邮箱里告知你打卡失败
 ![clock_in_result](./picture/clock_in_result.png)
 10. 当你不想再使用自动打卡时，只需要在 Settings 选项中删除fork的库就行了  
 ![delete repo](./picture/delete_repo.png)
